@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diário | MissãoEstelar</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#00D4FF">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="apple-touch-icon" href="icons/icon-192.svg">
+  <link rel="stylesheet" href="css/global.css">
+  <link href="https://fonts.googleapis.com/css?family=Orbitron:700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Nunito:400,700&display=swap" rel="stylesheet">
+  <style>
+    .diary-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 28px 0 24px;
+    }
+    .diary-avatar {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      border: 3px solid;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem;
+      background: #1A1A3E;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .diary-today {
+      background: rgba(26,26,62,0.92);
+      border-radius: 20px;
+      padding: 24px;
+      border: 2px solid rgba(0,212,255,0.3);
+      margin-bottom: 32px;
+    }
+    .diary-today-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.1rem;
+      color: var(--color-neon-blue);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .diary-textarea {
+      width: 100%;
+      min-height: 160px;
+      background: rgba(13,13,43,0.8);
+      border: 2px solid rgba(108,52,131,0.5);
+      border-radius: 14px;
+      color: #fff;
+      font-family: 'Nunito', sans-serif;
+      font-size: 1.1rem;
+      padding: 16px;
+      resize: vertical;
+      outline: none;
+      line-height: 1.7;
+      transition: border-color 0.2s;
+    }
+    .diary-textarea:focus {
+      border-color: var(--color-neon-blue);
+      box-shadow: 0 0 12px rgba(0,212,255,0.2);
+    }
+    .diary-textarea::placeholder { color: rgba(160,174,192,0.5); }
+
+    .btn-save-diary {
+      background: linear-gradient(90deg, #00b894, #00D4FF);
+      color: #0A0A1A;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 14px;
+      padding: 14px 32px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 14px;
+    }
+    .btn-save-diary:hover { transform: scale(1.04); box-shadow: 0 0 16px #00D4FF; }
+
+    /* Entradas anteriores */
+    .diary-entry {
+      background: rgba(26,26,62,0.85);
+      border-radius: 16px;
+      padding: 18px 20px;
+      margin-bottom: 14px;
+      border-left: 4px solid;
+      animation: bounce-in 0.4s;
+    }
+    .diary-entry-date {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+    .diary-entry-text {
+      font-size: 1rem;
+      line-height: 1.7;
+      color: #e0e0e0;
+    }
+
+    /* Emojis de humor */
+    .mood-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .mood-btn {
+      font-size: 1.8rem;
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      border: 2px solid rgba(108,52,131,0.4);
+      background: #1A1A3E;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .mood-btn:hover, .mood-btn.selected {
+      border-color: #FFD700;
+      box-shadow: 0 0 12px rgba(255,215,0,0.4);
+      transform: scale(1.15);
+      background: #2A2A4E;
+    }
+    .char-count {
+      text-align: right;
+      color: var(--text-secondary);
+      font-size: 0.82rem;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="stars-bg" id="stars-bg"></div>
+
+  <main style="position:relative;z-index:1;max-width:700px;margin:0 auto;padding:0 16px 120px;">
+
+    <!-- Header -->
+    <div class="diary-header">
+      <div class="diary-avatar" id="diary-avatar" style="border-color:#00D4FF;">🧑‍🚀</div>
+      <div>
+        <div style="font-family:'Orbitron',sans-serif;font-size:1.3rem;" id="diary-name">Astronauta</div>
+        <div style="color:var(--text-secondary);font-size:0.9rem;">📓 O meu diário espacial</div>
+      </div>
+      <button onclick="window.location.href='dashboard.html?profile='+_profileId"
+        style="margin-left:auto;background:transparent;border:2px solid rgba(160,174,192,0.4);
+          color:var(--text-secondary);border-radius:10px;padding:8px 16px;cursor:pointer;font-size:0.9rem;">
+        ← Voltar
+      </button>
+    </div>
+
+    <!-- Entrada de hoje -->
+    <div class="diary-today">
+      <div class="diary-today-title">
+        ✏️ Como foi o teu dia hoje?
+        <span style="font-size:0.8rem;color:var(--text-secondary);font-family:'Nunito',sans-serif;" id="today-date"></span>
+      </div>
+
+      <!-- Seletor de humor -->
+      <div style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:10px;">Como te sentes?</div>
+      <div class="mood-row" id="mood-row">
+        <button class="mood-btn" data-mood="😄" onclick="selectMood(this)" title="Muito feliz">😄</button>
+        <button class="mood-btn" data-mood="🙂" onclick="selectMood(this)" title="Bem">🙂</button>
+        <button class="mood-btn" data-mood="😐" onclick="selectMood(this)" title="Mais ou menos">😐</button>
+        <button class="mood-btn" data-mood="😔" onclick="selectMood(this)" title="Triste">😔</button>
+        <button class="mood-btn" data-mood="😤" onclick="selectMood(this)" title="Frustrado">😤</button>
+        <button class="mood-btn" data-mood="😴" onclick="selectMood(this)" title="Cansado">😴</button>
+        <button class="mood-btn" data-mood="🤩" onclick="selectMood(this)" title="Incrível">🤩</button>
+      </div>
+
+      <textarea class="diary-textarea" id="diary-text"
+        placeholder="Escreve aqui o que aconteceu hoje, como te sentiste, o que foi divertido..."
+        maxlength="1000"
+        oninput="document.getElementById('char-count').textContent = this.value.length + '/1000'"></textarea>
+      <div class="char-count" id="char-count">0/1000</div>
+
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+        <button class="btn-save-diary" onclick="saveDiary()">💾 Guardar no diário</button>
+        <span id="save-msg" style="font-size:0.9rem;"></span>
+      </div>
+    </div>
+
+    <!-- Dias guardados -->
+    <div style="font-family:'Orbitron',sans-serif;font-size:1.1rem;color:var(--color-purple);margin-bottom:16px;">
+      🌟 Os meus dias
+    </div>
+    <div id="past-entries">
+      <div style="color:var(--text-secondary);text-align:center;padding:20px;">A carregar...</div>
+    </div>
+
+  </main>
+
+  <img src="assets/cosmico.svg" alt="CÓSMICO"
+    style="position:fixed;right:24px;bottom:24px;width:90px;animation:float 3s infinite;z-index:50;">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/sounds.js"></script>
+  <script src="js/speech.js"></script>
+  <script>
+    // Estrelas
+    (function() {
+      const bg = document.getElementById('stars-bg');
+      for (let i = 0; i < 80; i++) {
+        const s = document.createElement('div');
+        s.style.cssText = `position:absolute;border-radius:50%;background:#fff;
+          left:${Math.random()*100}vw;top:${Math.random()*100}vh;
+          width:${Math.random()*2+1}px;height:${Math.random()*2+1}px;
+          opacity:${Math.random()*0.7+0.3};
+          animation:twinkle ${Math.random()*2+2}s infinite ease-in-out;`;
+        bg.appendChild(s);
+      }
+    })();
+
+    // Service Worker
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
+
+    let _profileId = null;
+    let _selectedMood = '';
+    let _todayEntry = null;
+
+    // Data de hoje formatada
+    document.getElementById('today-date').textContent =
+      new Date().toLocaleDateString('pt-BR', { weekday:'long', day:'numeric', month:'long' });
+
+    function toggleEntry(id) {
+      const el = document.getElementById(id);
+      const btn = el.previousElementSibling.querySelector('button');
+      if (el.style.display === 'none') {
+        el.style.display = 'block';
+        btn.textContent = '🙈';
+      } else {
+        el.style.display = 'none';
+        btn.textContent = '👁️';
+      }
+    }
+
+    function selectMood(btn) {
+      document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      _selectedMood = btn.getAttribute('data-mood');
+    }
+
+    async function init() {
+      // Verifica sessão
+      const session = sessionStorage.getItem('loggedProfile');
+      const urlId = new URL(window.location.href).searchParams.get('profile');
+      if (!session && !urlId) { window.location.href = 'index.html'; return; }
+
+      const profile = session ? JSON.parse(session) : null;
+      _profileId = profile?.id || urlId;
+
+      // Carrega dados do perfil
+      const dbProfile = await window.DB.getProfileById(_profileId);
+      if (!dbProfile) { window.location.href = 'index.html'; return; }
+
+      // Header
+      const av = document.getElementById('diary-avatar');
+      av.style.borderColor = dbProfile.color || '#00D4FF';
+      if (dbProfile.avatar_url) {
+        av.innerHTML = `<img src="${dbProfile.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+      } else {
+        av.textContent = dbProfile.avatar_emoji || '🧑‍🚀';
+      }
+      document.getElementById('diary-name').textContent = dbProfile.name;
+      document.getElementById('diary-name').style.color = dbProfile.color || '#00D4FF';
+
+      // Carrega todas as entradas
+      await loadPastEntries(dbProfile);
+    }
+
+    async function loadTodayEntry(dbProfile) {
+      const today = new Date().toISOString().slice(0, 10);
+      try {
+        const { data, error: loadErr } = await window._sb
+          .from('diaries')
+          .select('*')
+          .eq('profile_id', _profileId)
+          .eq('date', today)
+          .maybeSingle();
+        if (loadErr) { console.error('DIARIO loadToday error:', loadErr); throw loadErr; }
+
+        if (data) {
+          _todayEntry = data;
+          const textarea = document.getElementById('diary-text');
+          // Extrai humor e texto (formato: "😄 texto...")
+          const moodMatch = data.content?.match(/^([\u{1F000}-\u{1FFFF}][\uFE0F]?)\s([\s\S]*)/u);
+          if (moodMatch) {
+            _selectedMood = moodMatch[1];
+            textarea.value = moodMatch[2] || '';
+            document.querySelectorAll('.mood-btn').forEach(b => {
+              if (b.getAttribute('data-mood') === _selectedMood) b.classList.add('selected');
+            });
+          } else {
+            textarea.value = data.content || '';
+          }
+          document.getElementById('char-count').textContent = textarea.value.length + '/1000';
+        }
+      } catch(e) {}
+    }
+
+    async function loadPastEntries(dbProfile) {
+      const container = document.getElementById('past-entries');
+      try {
+        const { data, error: listErr } = await window._sb
+          .from('diaries')
+          .select('*')
+          .eq('profile_id', _profileId)
+          .order('created_at', { ascending: false })
+          .limit(30);
+        if (listErr) { console.error('DIARIO loadPast error:', listErr); throw listErr; }
+
+        const today = new Date().toISOString().slice(0, 10);
+        const entries = data || [];
+
+        if (!entries.length) {
+          container.innerHTML = `<div style="color:var(--text-secondary);text-align:center;padding:20px;">
+            Ainda não escreveste nada. Começa hoje!
+          </div>`;
+          return;
+        }
+
+        container.innerHTML = entries.map(e => {
+          const moodMatch = e.content?.match(/^([\u{1F000}-\u{1FFFF}][\uFE0F]?)\s([\s\S]*)/u);
+          const mood = moodMatch ? moodMatch[1] : '';
+          const text = moodMatch ? moodMatch[2] : (e.content || '');
+          const isToday = e.date === today;
+          const timeStr = e.created_at
+            ? new Date(e.created_at).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' })
+            : '';
+          const dateStr = isToday
+            ? `✨ Hoje${timeStr ? ' às ' + timeStr : ''}`
+            : new Date(e.date + 'T12:00:00').toLocaleDateString('pt-BR',
+                { weekday:'long', day:'numeric', month:'long' }) + (timeStr ? ' às ' + timeStr : '');
+
+          return `<div class="diary-entry" style="border-color:${isToday ? '#00FF88' : (dbProfile.color || '#6C3483')};">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div class="diary-entry-date">${mood ? mood + ' · ' : ''}${dateStr}</div>
+              <button onclick="toggleEntry('entry-${e.id}')" title="Mostrar/esconder"
+                style="background:none;border:none;cursor:pointer;font-size:1.3rem;padding:0 4px;opacity:0.7;">👁️</button>
+            </div>
+            <div id="entry-${e.id}" class="diary-entry-text" style="display:none;">${text.replace(/\n/g, '<br>')}</div>
+          </div>`;
+        }).join('');
+      } catch(e) {
+        container.innerHTML = `<div style="color:var(--color-red);">Erro ao carregar entradas.</div>`;
+      }
+    }
+
+    async function saveDiary() {
+      const text = document.getElementById('diary-text').value.trim();
+      const msgEl = document.getElementById('save-msg');
+
+      if (!text) {
+        msgEl.textContent = '✏️ Escreve alguma coisa primeiro!';
+        msgEl.style.color = 'var(--color-orange)';
+        return;
+      }
+
+      const content = _selectedMood ? `${_selectedMood} ${text}` : text;
+
+      try {
+        const { error: saveErr } = await window._sb
+          .from('diaries')
+          .insert({
+            profile_id: _profileId,
+            content,
+            date: new Date().toISOString().slice(0, 10)
+          });
+
+        if (saveErr) throw saveErr;
+
+        // Limpa o campo após guardar
+        document.getElementById('diary-text').value = '';
+        document.getElementById('char-count').textContent = '0/1000';
+        document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+        _selectedMood = '';
+
+        window.SFX?.taskDone();
+        msgEl.textContent = '✅ Guardado!';
+        msgEl.style.color = 'var(--color-green)';
+        if (window.SPEECH) window.SPEECH.speak('Diário guardado! Que bom escrever os teus pensamentos!');
+        setTimeout(() => { msgEl.textContent = ''; }, 3000);
+
+        // Recarrega a lista de dias para mostrar a entrada nova
+        const dbProfileForList = await window.DB.getProfileById(_profileId);
+        if (dbProfileForList) await loadPastEntries(dbProfileForList);
+      } catch(e) {
+        console.error('DIARIO save error:', e);
+        msgEl.textContent = '❌ ' + (e?.message || 'Erro ao guardar.');
+        msgEl.style.color = 'var(--color-red)';
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

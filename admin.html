@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin | MissãoEstelar</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#6C3483">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="apple-touch-icon" href="icons/icon-192.svg">
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/admin.css">
+  <link href="https://fonts.googleapis.com/css?family=Orbitron:700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Nunito:400,700&display=swap" rel="stylesheet">
+  <style>
+    /* ── LOGIN ──────────────────────────────────────────────── */
+    #login-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 80vh;
+      gap: 20px;
+    }
+    #login-screen h2 {
+      font-family: 'Orbitron', sans-serif;
+      color: var(--color-neon-blue);
+      font-size: 1.6rem;
+    }
+    .login-input {
+      background: #1A1A3E;
+      border: 2px solid var(--color-purple);
+      border-radius: 12px;
+      padding: 14px 20px;
+      color: #fff;
+      font-size: 1.3rem;
+      font-family: 'Nunito', sans-serif;
+      width: 260px;
+      text-align: center;
+      outline: none;
+    }
+    .login-input:focus { border-color: var(--color-neon-blue); }
+    #login-error { color: var(--color-red); font-size: 1rem; }
+
+    /* ── TABS ───────────────────────────────────────────────── */
+    #admin-panel { display: none; }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 20px 0;
+    }
+    .tab-btn {
+      background: #1A1A3E;
+      border: 2px solid var(--color-purple);
+      border-radius: 10px;
+      color: #fff;
+      padding: 10px 20px;
+      font-size: 0.95rem;
+      font-family: 'Orbitron', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab-btn.active, .tab-btn:hover {
+      background: var(--color-purple);
+      box-shadow: 0 0 12px var(--color-purple);
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── CARDS ──────────────────────────────────────────────── */
+    .admin-card {
+      background: rgba(26,26,62,0.9);
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 16px;
+      border: 2px solid rgba(108,52,131,0.3);
+    }
+    .overview-grid {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .overview-card {
+      background: rgba(26,26,62,0.9);
+      border-radius: 14px;
+      padding: 20px;
+      min-width: 200px;
+      flex: 1;
+      border: 3px solid;
+    }
+    .overview-card h3 { font-family: 'Orbitron', sans-serif; font-size: 1rem; margin-bottom: 10px; }
+
+    /* ── FORM ───────────────────────────────────────────────── */
+    .form-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    .form-row label { font-size: 0.9rem; color: var(--text-secondary); }
+    .form-input {
+      background: #0D0D2B;
+      border: 2px solid var(--color-purple);
+      border-radius: 10px;
+      color: #fff;
+      padding: 10px 14px;
+      font-size: 1rem;
+      font-family: 'Nunito', sans-serif;
+      width: 100%;
+      outline: none;
+    }
+    .form-input:focus { border-color: var(--color-neon-blue); }
+    .form-row select.form-input option { background: #1A1A3E; }
+
+    .btn-admin {
+      background: linear-gradient(90deg, var(--color-purple), var(--color-neon-blue));
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 24px;
+      font-size: 1rem;
+      font-family: 'Orbitron', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-admin:hover { transform: scale(1.04); box-shadow: 0 0 12px var(--color-neon-blue); }
+    .btn-danger {
+      background: linear-gradient(90deg, #c0392b, #FF4757);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      border-radius: 8px;
+    }
+    .btn-success {
+      background: linear-gradient(90deg, #00b894, #00FF88);
+      color: #0A0A1A;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .badge-pending {
+      background: var(--color-orange);
+      color: #0A0A1A;
+      border-radius: 999px;
+      padding: 2px 10px;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+    .section-title-admin {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.2rem;
+      color: var(--color-neon-blue);
+      margin: 24px 0 12px;
+    }
+
+    /* ── PIN / AVATAR GRID ──────────────────────────────────── */
+    .profile-edit-card {
+      background: rgba(13,13,43,0.7);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+      border: 2px solid rgba(108,52,131,0.4);
+    }
+    .profile-edit-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .profile-edit-avatar-preview {
+      width: 70px; height: 70px;
+      border-radius: 50%;
+      border: 3px solid;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.2rem;
+      background: #1A1A3E;
+      flex-shrink: 0;
+    }
+    .emoji-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 10px 0;
+    }
+    .emoji-btn {
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      border: 2px solid rgba(108,52,131,0.4);
+      background: #1A1A3E;
+      font-size: 1.4rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .emoji-btn:hover { border-color: #00D4FF; transform: scale(1.15); }
+    .emoji-btn.selected { border-color: #FFD700; box-shadow: 0 0 10px #FFD700; background: #2A2A4E; }
+    .color-swatch {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 3px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .color-swatch:hover, .color-swatch.selected { border-color: #fff; transform: scale(1.15); }
+    .pin-input-field {
+      background: #0D0D2B;
+      border: 2px solid var(--color-purple);
+      border-radius: 8px;
+      color: #fff;
+      padding: 8px 12px;
+      font-size: 1.2rem;
+      width: 100px;
+      text-align: center;
+      font-family: 'Orbitron', sans-serif;
+      letter-spacing: 4px;
+    }
+
+    /* ── MESADA ─────────────────────────────────────────────── */
+    .allowance-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      background: rgba(13,13,43,0.7);
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+      border: 2px solid rgba(108,52,131,0.3);
+    }
+    .remun-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      padding: 14px;
+      background: rgba(13,13,43,0.6);
+      border-radius: 12px;
+      margin-bottom: 10px;
+      border: 2px solid rgba(108,52,131,0.25);
+    }
+    .remun-row.paid { opacity: 0.65; }
+    .rate-bar-wrap {
+      background: rgba(255,255,255,0.07);
+      border-radius: 6px;
+      height: 8px;
+      overflow: hidden;
+      flex: 1;
+      min-width: 80px;
+    }
+    .rate-bar-fill {
+      height: 100%;
+      border-radius: 6px;
+      transition: width 0.6s;
+    }
+  </style>
+</head>
+<body>
+  <div class="stars-bg" id="stars-bg"></div>
+
+  <main style="position:relative;z-index:1;max-width:1000px;margin:0 auto;padding:0 16px 100px;">
+    <h1 class="glow-text" style="text-align:center;font-size:2rem;margin-top:28px;">
+      ⚙️ Painel das Mães
+    </h1>
+
+    <!-- TELA DE LOGIN -->
+    <div id="login-screen">
+      <h2>🔐 Área das Mães</h2>
+      <p style="color:var(--text-secondary);">Digite a senha para continuar</p>
+      <input type="password" id="admin-pw" class="login-input" placeholder="••••••••"
+        onkeydown="if(event.key==='Enter') doLogin()">
+      <button class="btn-cosmic" onclick="doLogin()">ENTRAR 🚀</button>
+      <div id="login-error"></div>
+      <button onclick="window.location.href='index.html'"
+        style="background:transparent;border:none;color:var(--text-secondary);cursor:pointer;font-size:0.9rem;margin-top:8px;">
+        ← Voltar
+      </button>
+    </div>
+
+    <!-- PAINEL ADMIN (mostrado após login) -->
+    <div id="admin-panel">
+      <button onclick="doLogout()"
+        style="background:transparent;border:2px solid var(--color-red);color:var(--color-red);border-radius:10px;padding:8px 18px;cursor:pointer;font-size:0.9rem;float:right;margin-top:4px;">
+        Sair
+      </button>
+
+      <!-- TABS -->
+      <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('overview')">📊 Visão Geral</button>
+        <button class="tab-btn" onclick="showTab('pins')">🔑 Palavras-passe</button>
+        <button class="tab-btn" onclick="showTab('rewards-tab')">
+          🏆 Recompensas
+          <span id="pending-badge" class="badge-pending" style="display:none;">0</span>
+        </button>
+        <button class="tab-btn" onclick="showTab('tasks-tab')">📝 Tarefas</button>
+        <button class="tab-btn" onclick="showTab('diaries')">📓 Diário</button>
+        <button class="tab-btn" onclick="showTab('mesada')">💰 Mesada</button>
+      </div>
+
+      <!-- TAB: VISÃO GERAL ─────────────────────────────────── -->
+      <div class="tab-content active" id="tab-overview">
+        <div id="overview-content">
+          <div style="color:var(--text-secondary);text-align:center;padding:30px;">Carregando... 🛸</div>
+        </div>
+
+        <div class="section-title-admin">🏆 Ranking Semanal</div>
+        <div id="admin-ranking">
+          <div style="color:var(--text-secondary);text-align:center;padding:20px;">Carregando ranking...</div>
+        </div>
+      </div>
+
+      <!-- TAB: PINs ────────────────────────────────────────── -->
+      <div class="tab-content" id="tab-pins">
+        <div class="section-title-admin">🔑 Gerir Palavras-passe dos Filhos</div>
+        <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:20px;">
+          A palavra-passe tem 4 dígitos e é usada por cada filho para aceder ao app.
+        </p>
+        <div id="pin-list">
+          <div style="color:var(--text-secondary);">Carregando perfis...</div>
+        </div>
+      </div>
+
+      <!-- TAB: RECOMPENSAS ─────────────────────────────────── -->
+      <div class="tab-content" id="tab-rewards-tab">
+
+        <!-- Pedidos pendentes -->
+        <div class="section-title-admin">
+          ⏰ Pedidos Pendentes
+          <span id="pending-count-label" style="color:var(--color-orange);font-size:0.9rem;"></span>
+        </div>
+        <div id="pending-redemptions">
+          <div style="color:var(--text-secondary);">Carregando pedidos...</div>
+        </div>
+
+        <!-- Catálogo de recompensas -->
+        <div class="section-title-admin" style="margin-top:32px;">🎁 Catálogo de Recompensas</div>
+        <div id="rewards-list">
+          <div style="color:var(--text-secondary);">Carregando recompensas...</div>
+        </div>
+
+        <!-- Adicionar recompensa -->
+        <div class="section-title-admin" style="margin-top:32px;">➕ Adicionar Recompensa</div>
+        <div class="admin-card">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div class="form-row">
+              <label>Título</label>
+              <input type="text" id="r-title" class="form-input" placeholder="Ex: 30min de tela extra">
+            </div>
+            <div class="form-row">
+              <label>Ícone (emoji)</label>
+              <input type="text" id="r-icon" class="form-input" placeholder="📱" maxlength="4">
+            </div>
+            <div class="form-row">
+              <label>Custo em pontos</label>
+              <input type="number" id="r-cost" class="form-input" placeholder="50" min="1">
+            </div>
+            <div class="form-row">
+              <label>Descrição (opcional)</label>
+              <input type="text" id="r-desc" class="form-input" placeholder="Detalhes...">
+            </div>
+          </div>
+          <button class="btn-admin" onclick="addReward()">➕ ADICIONAR</button>
+          <span id="reward-msg" style="margin-left:16px;font-size:0.9rem;"></span>
+        </div>
+      </div>
+
+      <!-- TAB: TAREFAS ─────────────────────────────────────── -->
+      <div class="tab-content" id="tab-tasks-tab">
+        <div class="section-title-admin">📝 Gerenciar Tarefas</div>
+
+        <div class="admin-card" style="margin-bottom:24px;">
+          <div style="font-family:'Orbitron',sans-serif;font-size:1rem;margin-bottom:16px;color:var(--color-gold);">
+            ➕ Nova Tarefa
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div class="form-row">
+              <label>Filho</label>
+              <select id="t-profile" class="form-input">
+                <option value="">Selecione...</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>Título da tarefa</label>
+              <input type="text" id="t-title" class="form-input" placeholder="Ex: Arrumar o quarto">
+            </div>
+            <div class="form-row">
+              <label>Ícone (emoji)</label>
+              <input type="text" id="t-icon" class="form-input" placeholder="🛏️" maxlength="4">
+            </div>
+            <div class="form-row">
+              <label>Pontos de recompensa</label>
+              <input type="number" id="t-pts" class="form-input" placeholder="10" min="1">
+            </div>
+            <div class="form-row">
+              <label>Horário do lembrete</label>
+              <input type="time" id="t-reminder" class="form-input">
+            </div>
+            <div class="form-row">
+              <label>Prazo máximo</label>
+              <input type="time" id="t-deadline" class="form-input">
+            </div>
+            <div class="form-row">
+              <label>Frequência</label>
+              <select id="t-freq" class="form-input">
+                <option value="daily">Diária</option>
+                <option value="weekly">Semanal (dias específicos)</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>Categoria</label>
+              <input type="text" id="t-cat" class="form-input" placeholder="Ex: pre-jantar">
+            </div>
+          </div>
+          <button class="btn-admin" onclick="addTask()">➕ ADICIONAR TAREFA</button>
+          <span id="task-msg" style="margin-left:16px;font-size:0.9rem;"></span>
+        </div>
+
+        <div class="section-title-admin">Tarefas por Filho</div>
+        <div id="tasks-per-profile">
+          <div style="color:var(--text-secondary);">Carregando tarefas...</div>
+        </div>
+      </div>
+
+      <!-- TAB: DIÁRIO ──────────────────────────────────────── -->
+      <div class="tab-content" id="tab-diaries">
+        <div class="section-title-admin">📓 Diário dos Filhos</div>
+        <div id="diaries-list">
+          <div style="color:var(--text-secondary);">Carregando diários...</div>
+        </div>
+      </div>
+
+      <!-- TAB: MESADA ──────────────────────────────────────── -->
+      <div class="tab-content" id="tab-mesada">
+        <div class="section-title-admin">💰 Mesada Mensal</div>
+        <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:20px;">
+          Define a mesada base de cada filho. O valor a receber no próximo mês é calculado
+          automaticamente com base nas tarefas concluídas no mês anterior.
+        </p>
+
+        <!-- Mesada base por filho -->
+        <div class="section-title-admin" style="margin-top:0;">👶 Mesada Base por Filho</div>
+        <div id="allowance-list">
+          <div style="color:var(--text-secondary);">Carregando...</div>
+        </div>
+
+        <!-- Calcular mês anterior -->
+        <div class="section-title-admin" style="margin-top:32px;">📊 Calcular Mês Anterior</div>
+        <div class="admin-card">
+          <p style="color:var(--text-secondary);font-size:0.9rem;margin:0 0 16px;">
+            Calcula a mesada a receber este mês com base nas tarefas concluídas no mês anterior.
+            O resultado é guardado automaticamente no histórico.
+          </p>
+          <button class="btn-admin" onclick="calculateLastMonth()">🔢 CALCULAR MÊS ANTERIOR</button>
+          <div id="calc-result" style="margin-top:16px;"></div>
+        </div>
+
+        <!-- Histórico de pagamentos -->
+        <div class="section-title-admin" style="margin-top:32px;">📋 Histórico de Pagamentos</div>
+        <div id="remuneration-history">
+          <div style="color:var(--text-secondary);">Carregando histórico...</div>
+        </div>
+      </div>
+
+    </div><!-- /admin-panel -->
+  </main>
+
+  <img src="assets/cosmico.svg" alt="CÓSMICO"
+    style="position:fixed;right:32px;bottom:32px;width:100px;animation:float 3s infinite;z-index:2;">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/avatar.js"></script>
+  <script>
+    // ── ESTRELAS ─────────────────────────────────────────────────
+    (function() {
+      const bg = document.getElementById('stars-bg');
+      for (let i = 0; i < 100; i++) {
+        const s = document.createElement('div');
+        s.style.cssText = `position:absolute;border-radius:50%;background:#fff;
+          left:${Math.random()*100}vw;top:${Math.random()*100}vh;
+          width:${Math.random()*2+1}px;height:${Math.random()*2+1}px;
+          opacity:${Math.random()*0.7+0.3};
+          animation:twinkle ${Math.random()*2+2}s infinite ease-in-out;`;
+        bg.appendChild(s);
+      }
+    })();
+
+    // ── AUTH ─────────────────────────────────────────────────────
+    function doLogin() {
+      const pw = document.getElementById('admin-pw').value;
+      if (pw === CONFIG.admin.password) {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('admin-panel').style.display = 'block';
+        sessionStorage.setItem('adminLoggedIn', '1');
+        loadAllData();
+      } else {
+        const err = document.getElementById('login-error');
+        err.textContent = '❌ Senha incorreta!';
+        err.style.animation = 'none';
+        setTimeout(() => { err.style.animation = 'shake 0.4s'; }, 10);
+      }
+    }
+
+    function doLogout() {
+      sessionStorage.removeItem('adminLoggedIn');
+      window.location.href = 'index.html';
+    }
+
+    document.getElementById('admin-pw').addEventListener('keydown', e => {
+      if (e.key === 'Enter') doLogin();
+    });
+
+    // Restaura sessão
+    if (sessionStorage.getItem('adminLoggedIn')) {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('admin-panel').style.display = 'block';
+      loadAllData();
+    }
+
+    // ── TABS ─────────────────────────────────────────────────────
+    function showTab(name) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('tab-' + name).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    // ── CARREGA TUDO ─────────────────────────────────────────────
+    let _profiles = [];
+
+    async function loadAllData() {
+      await Promise.all([
+        loadOverview(),
+        loadRanking(),
+        loadPins(),
+        loadPendingRedemptions(),
+        loadRewards(),
+        loadDiaries(),
+        loadMesada()
+      ]);
+      await loadTasksTab();
+    }
+
+    // ── VISÃO GERAL ──────────────────────────────────────────────
+    async function loadOverview() {
+      const container = document.getElementById('overview-content');
+      const data = await window.DB.getTodayOverview();
+
+      if (!data || data.length === 0) {
+        container.innerHTML = `<div style="color:var(--text-secondary);">Nenhum perfil encontrado.</div>`;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="section-title-admin">👨‍👩‍👧 Resumo de Hoje</div>
+        <div class="overview-grid">
+          ${data.map(p => {
+            const hairDays = p.hairWash?.[0]?.days_since ?? null;
+            let hairColor = 'var(--color-green)';
+            let hairMsg = hairDays === null ? 'Sem registro' : `${hairDays} dias`;
+            if (hairDays >= CONFIG.hairWash.alertAfterDays) hairColor = 'var(--color-red)';
+            else if (hairDays >= CONFIG.hairWash.warnAfterDays) hairColor = 'var(--color-orange)';
+
+            return `
+              <div class="overview-card" style="border-color:${p.color || '#00D4FF'};">
+                <h3 style="color:${p.color || '#00D4FF'};">${p.avatar_emoji || '🧑‍🚀'} ${p.name}</h3>
+                <div style="color:var(--color-green);margin:4px 0;">
+                  ✅ ${p.done}/${p.total} tarefas hoje
+                </div>
+                <div style="color:var(--color-gold);">⭐ ${p.total_points || 0} pontos</div>
+                <div style="color:${hairColor};margin-top:4px;font-size:0.9rem;">
+                  💧 Cabelo: ${hairMsg}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    // ── RANKING ──────────────────────────────────────────────────
+    async function loadRanking() {
+      const container = document.getElementById('admin-ranking');
+      const ranking = await window.DB.getWeeklyRanking();
+
+      if (!ranking || ranking.length === 0) {
+        container.innerHTML = `<div style="color:var(--text-secondary);">Nenhum dado esta semana.</div>`;
+        return;
+      }
+
+      const medals = ['🥇', '🥈', '🥉'];
+      container.innerHTML = ranking.map((r, i) => `
+        <div style="display:flex;align-items:center;gap:12px;padding:12px;background:rgba(26,26,62,0.7);border-radius:12px;margin-bottom:8px;border:2px solid ${r.color || '#6C3483'}40;">
+          <span style="font-size:1.5rem;">${medals[i] || `#${i+1}`}</span>
+          <span style="font-size:1.5rem;">${r.avatar_emoji || '🧑‍🚀'}</span>
+          <span style="font-family:'Orbitron',sans-serif;flex:1;color:${r.color || '#fff'};">${r.name}</span>
+          <span style="color:var(--color-green);">${r.tasks_done_week || 0} tarefas</span>
+          <span style="color:var(--color-gold);">⭐ ${r.total_points || 0}</span>
+        </div>
+      `).join('');
+    }
+
+    // ── PINs & AVATARES ──────────────────────────────────────────
+    const AVATAR_EMOJIS = [
+      // Meninos
+      '👦','🧒‍♂️','👱‍♂️','🧑‍🦱','🧑‍🦰',
+      // Meninas
+      '👧','🧒‍♀️','👱‍♀️','🧑‍🦳','🧒',
+      // Astronautas
+      '🧑‍🚀','👨‍🚀','👩‍🚀','🚀','🛸',
+      // Super-heróis
+      '🦸‍♂️','🦸‍♀️','🦹‍♂️','🦹‍♀️','🦄',
+      // Diversão
+      '🎮','🏆','⭐','🌟','💫',
+      // Animais fofos
+      '🐱','🐶','🦊','🐼','🐸',
+    ];
+
+    const PROFILE_COLORS = [
+      '#00D4FF','#FFD700','#9B59B6','#00FF88',
+      '#FF6B6B','#FF8C42','#A8E6CF','#F8BBD9',
+      '#6C63FF','#FF4757','#2ED573','#FFA502',
+    ];
+
+    async function loadPins() {
+      const container = document.getElementById('pin-list');
+      const profiles = await window.DB.getProfiles();
+      if (!profiles) {
+        container.innerHTML = `<div style="color:var(--color-red);">Erro ao carregar perfis.</div>`;
+        return;
+      }
+      _profiles = profiles;
+
+      // Preenche select de tarefas também
+      const sel = document.getElementById('t-profile');
+      if (sel) {
+        sel.innerHTML = `<option value="">Selecione...</option>` +
+          profiles.map(p => `<option value="${p.id}">${p.avatar_emoji} ${p.name}</option>`).join('');
+      }
+
+      container.innerHTML = profiles.map(p => `
+        <div class="profile-edit-card" id="card-${p.id}">
+
+          <!-- Cabeçalho com preview do avatar -->
+          <div class="profile-edit-header">
+            <div class="profile-edit-avatar-preview" id="preview-${p.id}"
+              style="border-color:${p.color || '#00D4FF'}; overflow:hidden;">
+              ${p.avatar_url
+                ? `<img src="${p.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+                : `<span style="font-size:2.2rem;">${p.avatar_emoji || '🧑‍🚀'}</span>`}
+            </div>
+            <div>
+              <div style="font-family:'Orbitron',sans-serif;font-size:1.1rem;color:${p.color || '#fff'};">
+                ${p.name}
+              </div>
+              <div style="color:var(--text-secondary);font-size:0.85rem;">⭐ ${p.total_points || 0} pontos</div>
+            </div>
+            <span id="profile-msg-${p.id}" style="margin-left:auto;font-size:0.9rem;"></span>
+          </div>
+
+          <!-- Upload de foto -->
+          <div style="margin-bottom:18px;padding:16px;background:rgba(0,212,255,0.06);border-radius:12px;border:2px dashed rgba(0,212,255,0.3);">
+            <div style="color:var(--color-neon-blue);font-size:0.9rem;font-weight:bold;margin-bottom:10px;">
+              📷 Foto do perfil
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+              <label for="img-${p.id}" style="
+                background:linear-gradient(90deg,#6C3483,#00D4FF);
+                color:#fff;border-radius:10px;padding:10px 20px;
+                cursor:pointer;font-size:0.9rem;font-family:'Orbitron',sans-serif;
+                white-space:nowrap;">
+                📁 Escolher foto
+              </label>
+              <input type="file" id="img-${p.id}" accept="image/*"
+                style="display:none;"
+                onchange="uploadAvatarPhoto('${p.id}', this)">
+              <span id="upload-msg-${p.id}" style="font-size:0.85rem;color:var(--text-secondary);">
+                ${p.avatar_url ? '✅ Foto carregada' : 'Nenhuma foto ainda'}
+              </span>
+              ${p.avatar_url ? `
+                <button onclick="removeAvatarPhoto('${p.id}')"
+                  style="background:transparent;border:1px solid var(--color-red);color:var(--color-red);
+                  border-radius:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem;">
+                  🗑️ Remover foto
+                </button>` : ''}
+            </div>
+          </div>
+
+          <!-- Seletor de emoji (alternativa à foto) -->
+          <div style="margin-bottom:14px;">
+            <div style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:8px;">
+              Ou escolha um emoji (usado quando não há foto):
+            </div>
+            <div class="emoji-grid" id="emojis-${p.id}">
+              ${AVATAR_EMOJIS.map(e => `
+                <button class="emoji-btn ${e === p.avatar_emoji ? 'selected' : ''}"
+                  onclick="selectEmoji('${p.id}', this, '${e}')">${e}</button>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Seletor de cor -->
+          <div style="margin-bottom:16px;">
+            <div style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:8px;">Cor do perfil:</div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              ${PROFILE_COLORS.map(c => `
+                <div class="color-swatch ${c === p.color ? 'selected' : ''}"
+                  style="background:${c};box-shadow:0 0 8px ${c}40;"
+                  onclick="selectColor('${p.id}', this, '${c}')"></div>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- PIN -->
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+            <div>
+              <div style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:6px;">Palavra-passe (4 dígitos):</div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <input type="password" class="pin-input-field" id="pin-${p.id}"
+                  value="${p.pin || '1234'}" maxlength="4" pattern="[0-9]{4}"
+                  placeholder="••••" inputmode="numeric">
+                <button onclick="togglePinVisibility('${p.id}')" id="eye-${p.id}"
+                  title="Mostrar/ocultar palavra-passe"
+                  style="background:rgba(108,52,131,0.3);border:2px solid #6C3483;border-radius:8px;
+                    color:#fff;font-size:1.2rem;width:42px;height:42px;cursor:pointer;
+                    display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  👁️
+                </button>
+              </div>
+            </div>
+            <div style="margin-top:20px;">
+              <button class="btn-admin" style="padding:10px 22px;font-size:0.9rem;"
+                onclick="saveProfile('${p.id}')">💾 Salvar</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      // Guarda seleções atuais em memória
+      profiles.forEach(p => {
+        _profileSelections[p.id] = { emoji: p.avatar_emoji || '🧑‍🚀', color: p.color || '#00D4FF' };
+      });
+    }
+
+    const _profileSelections = {};
+
+    // Upload de foto via Supabase Storage
+    async function uploadAvatarPhoto(profileId, input) {
+      const file = input.files[0];
+      if (!file) return;
+      const msgEl = document.getElementById(`upload-msg-${profileId}`);
+      const preview = document.getElementById(`preview-${profileId}`);
+
+      msgEl.textContent = '⏳ Enviando...';
+      msgEl.style.color = 'var(--color-neon-blue)';
+
+      const url = await window.DB.uploadAvatar(profileId, file);
+      if (url) {
+        // Atualiza preview imediatamente
+        preview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+        msgEl.textContent = '✅ Foto enviada!';
+        msgEl.style.color = 'var(--color-green)';
+        // Recarrega o card para mostrar botão de remover
+        setTimeout(() => loadPins(), 1500);
+      } else {
+        msgEl.textContent = '❌ Erro no upload. Verifique o bucket "avatars" no Supabase.';
+        msgEl.style.color = 'var(--color-red)';
+      }
+    }
+
+    function togglePinVisibility(profileId) {
+      const input = document.getElementById(`pin-${profileId}`);
+      const btn = document.getElementById(`eye-${profileId}`);
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+        btn.title = 'Ocultar palavra-passe';
+      } else {
+        input.type = 'password';
+        btn.textContent = '👁️';
+        btn.title = 'Mostrar palavra-passe';
+      }
+    }
+
+    async function removeAvatarPhoto(profileId) {
+      if (!confirm('Remover a foto e voltar ao emoji?')) return;
+      const msgEl = document.getElementById(`upload-msg-${profileId}`);
+      const preview = document.getElementById(`preview-${profileId}`);
+
+      const ok = await window.DB.removeAvatar(profileId);
+      if (ok) {
+        const sel = _profileSelections[profileId] || {};
+        preview.innerHTML = `<span style="font-size:2.2rem;">${sel.emoji || '🧑‍🚀'}</span>`;
+        msgEl.textContent = 'Foto removida';
+        msgEl.style.color = 'var(--text-secondary)';
+        setTimeout(() => loadPins(), 1000);
+      }
+    }
+
+    function selectEmoji(profileId, btn, emoji) {
+      document.querySelectorAll(`#emojis-${profileId} .emoji-btn`).forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      _profileSelections[profileId] = _profileSelections[profileId] || {};
+      _profileSelections[profileId].emoji = emoji;
+      // Só atualiza preview se não tiver foto
+      const preview = document.getElementById(`preview-${profileId}`);
+      if (!preview.querySelector('img')) {
+        preview.innerHTML = `<span style="font-size:2.2rem;">${emoji}</span>`;
+      }
+    }
+
+    function selectColor(profileId, swatch, color) {
+      // Desmarca anterior
+      swatch.closest('div').querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+      swatch.classList.add('selected');
+      _profileSelections[profileId] = _profileSelections[profileId] || {};
+      _profileSelections[profileId].color = color;
+      // Atualiza preview
+      const preview = document.getElementById(`preview-${profileId}`);
+      preview.style.borderColor = color;
+    }
+
+    async function saveProfile(profileId) {
+      const msgEl = document.getElementById(`profile-msg-${profileId}`);
+      const pin = document.getElementById(`pin-${profileId}`).value.trim();
+
+      if (!/^\d{4}$/.test(pin)) {
+        msgEl.textContent = '❌ A palavra-passe deve ter 4 números!';
+        msgEl.style.color = 'var(--color-red)';
+        return;
+      }
+
+      const sel = _profileSelections[profileId] || {};
+      const ok = await window.DB.updateProfile(profileId, {
+        pin,
+        avatar_emoji: sel.emoji,
+        color: sel.color
+      });
+
+      msgEl.textContent = ok ? '✅ Salvo!' : '❌ Erro ao salvar!';
+      msgEl.style.color = ok ? 'var(--color-green)' : 'var(--color-red)';
+      setTimeout(() => { msgEl.textContent = ''; }, 3000);
+
+      if (ok) {
+        // Atualiza o select de tarefas com o novo emoji
+        await loadPins();
+      }
+    }
+
+    // ── PEDIDOS PENDENTES ────────────────────────────────────────
+    async function loadPendingRedemptions() {
+      const container = document.getElementById('pending-redemptions');
+      const data = await window.DB.getPendingRedemptions();
+
+      // Atualiza badge
+      const count = data?.length || 0;
+      const badge = document.getElementById('pending-badge');
+      const label = document.getElementById('pending-count-label');
+      if (count > 0) {
+        badge.textContent = count;
+        badge.style.display = 'inline';
+        if (label) label.textContent = `(${count} aguardando)`;
+      } else {
+        badge.style.display = 'none';
+        if (label) label.textContent = '';
+      }
+
+      if (!data || data.length === 0) {
+        container.innerHTML = `<div style="color:var(--text-secondary);padding:16px 0;">Nenhum pedido pendente. ✅</div>`;
+        return;
+      }
+
+      container.innerHTML = data.map(r => `
+        <div class="admin-card" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+          <div style="font-size:2rem;">${r.rewards?.icon || '🎁'}</div>
+          <div style="flex:1;">
+            <div style="font-weight:bold;">${r.profiles?.avatar_emoji || ''} ${r.profiles?.name || '-'}</div>
+            <div style="color:var(--color-gold);">${r.rewards?.title || '-'}</div>
+            <div style="color:var(--text-secondary);font-size:0.85rem;">
+              ${new Date(r.redeemed_at).toLocaleString('pt-BR')} •
+              ⭐ ${r.rewards?.points_cost || 0} pontos
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn-success" onclick="updateRedemption('${r.id}', 'approved', this)">
+              ✅ Aprovar
+            </button>
+            <button class="btn-danger" onclick="updateRedemption('${r.id}', 'rejected', this)">
+              ❌ Recusar
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function updateRedemption(id, status, btnEl) {
+      btnEl.disabled = true;
+      const ok = await window.DB.updateRedemptionStatus(id, status);
+      if (ok) {
+        const card = btnEl.closest('.admin-card');
+        card.style.opacity = '0.5';
+        card.querySelectorAll('button').forEach(b => b.disabled = true);
+        const statusLabel = status === 'approved' ? '✅ Aprovado' : '❌ Recusado';
+        card.insertAdjacentHTML('beforeend',
+          `<span style="color:${status==='approved'?'var(--color-green)':'var(--color-red)'};">${statusLabel}</span>`);
+        // Atualiza badge
+        await loadPendingRedemptions();
+      } else {
+        btnEl.disabled = false;
+        alert('Erro ao atualizar pedido.');
+      }
+    }
+
+    // ── RECOMPENSAS ──────────────────────────────────────────────
+    async function loadRewards() {
+      const container = document.getElementById('rewards-list');
+      const rewards = await window.DB.getRewards();
+
+      if (!rewards || rewards.length === 0) {
+        container.innerHTML = `<div style="color:var(--text-secondary);">Nenhuma recompensa cadastrada.</div>`;
+        return;
+      }
+
+      container.innerHTML = `
+        <div style="display:flex;gap:16px;flex-wrap:wrap;">
+          ${rewards.map(r => `
+            <div style="background:rgba(26,26,62,0.9);border-radius:12px;padding:16px;min-width:160px;border:2px solid rgba(108,52,131,0.4);text-align:center;">
+              <div style="font-size:2.5rem;">${r.icon || '🎁'}</div>
+              <div style="font-weight:bold;margin:6px 0;">${r.title}</div>
+              <div style="color:var(--color-gold);">⭐ ${r.points_cost}</div>
+              <button class="btn-danger" style="margin-top:10px;width:100%;" onclick="removeReward('${r.id}', this)">
+                🗑️ Remover
+              </button>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    async function addReward() {
+      const title = document.getElementById('r-title').value.trim();
+      const icon = document.getElementById('r-icon').value.trim() || '🎁';
+      const cost = parseInt(document.getElementById('r-cost').value);
+      const desc = document.getElementById('r-desc').value.trim();
+      const msgEl = document.getElementById('reward-msg');
+
+      if (!title || !cost) {
+        msgEl.textContent = '❌ Preencha título e custo!';
+        msgEl.style.color = 'var(--color-red)';
+        return;
+      }
+
+      const res = await window.DB.saveReward({ title, icon, points_cost: cost, description: desc || null });
+      if (res) {
+        msgEl.textContent = '✅ Recompensa adicionada!';
+        msgEl.style.color = 'var(--color-green)';
+        document.getElementById('r-title').value = '';
+        document.getElementById('r-icon').value = '';
+        document.getElementById('r-cost').value = '';
+        document.getElementById('r-desc').value = '';
+        loadRewards();
+      } else {
+        msgEl.textContent = '❌ Erro ao salvar!';
+        msgEl.style.color = 'var(--color-red)';
+      }
+      setTimeout(() => { msgEl.textContent = ''; }, 4000);
+    }
+
+    async function removeReward(id, btnEl) {
+      if (!confirm('Remover esta recompensa?')) return;
+      btnEl.disabled = true;
+      const ok = await window.DB.deleteReward(id);
+      if (ok) loadRewards();
+      else { btnEl.disabled = false; alert('Erro ao remover.'); }
+    }
+
+    // ── TAREFAS ──────────────────────────────────────────────────
+    async function loadTasksTab() {
+      const container = document.getElementById('tasks-per-profile');
+      if (!_profiles.length) {
+        container.innerHTML = `<div style="color:var(--text-secondary);">Carregando perfis...</div>`;
+        return;
+      }
+
+      const allTasksData = await Promise.all(
+        _profiles.map(p => window.DB.getTasksByProfile(p.id).then(tasks => ({ profile: p, tasks: tasks || [] })))
+      );
+
+      container.innerHTML = allTasksData.map(({ profile, tasks }) => `
+        <div class="admin-card" style="margin-bottom:20px;border-color:${profile.color}40;">
+          <h3 style="color:${profile.color};font-family:'Orbitron',sans-serif;margin-bottom:12px;">
+            ${profile.avatar_emoji} ${profile.name}
+            <span style="color:var(--text-secondary);font-size:0.8rem;font-family:'Nunito',sans-serif;">
+              (${tasks.length} tarefas)
+            </span>
+          </h3>
+          ${tasks.length === 0
+            ? `<div style="color:var(--text-secondary);font-size:0.9rem;">Nenhuma tarefa cadastrada.</div>`
+            : `<div style="display:flex;flex-direction:column;gap:8px;">
+                ${tasks.map(t => `
+                  <div style="display:flex;align-items:center;gap:12px;padding:10px;background:rgba(13,13,43,0.6);border-radius:10px;">
+                    <span style="font-size:1.5rem;">${t.icon || '⭐'}</span>
+                    <div style="flex:1;">
+                      <div style="font-weight:bold;">${t.title}</div>
+                      <div style="color:var(--text-secondary);font-size:0.82rem;">
+                        ⏰ ${t.reminder_time ? t.reminder_time.slice(0,5) : '-'} |
+                        ⚡ ${t.deadline_time ? t.deadline_time.slice(0,5) : '-'} |
+                        +${t.points_reward} ⭐ |
+                        ${t.frequency === 'daily' ? 'Diária' : 'Semanal'}
+                      </div>
+                    </div>
+                    <button class="btn-danger" onclick="deleteTask('${t.id}', this)">🗑️</button>
+                  </div>
+                `).join('')}
+               </div>`
+          }
+        </div>
+      `).join('');
+    }
+
+    async function addTask() {
+      const profileId = document.getElementById('t-profile').value;
+      const title = document.getElementById('t-title').value.trim();
+      const icon = document.getElementById('t-icon').value.trim() || '⭐';
+      const pts = parseInt(document.getElementById('t-pts').value) || 10;
+      const reminder = document.getElementById('t-reminder').value || null;
+      const deadline = document.getElementById('t-deadline').value || null;
+      const freq = document.getElementById('t-freq').value;
+      const cat = document.getElementById('t-cat').value.trim() || null;
+      const msgEl = document.getElementById('task-msg');
+
+      if (!profileId || !title) {
+        msgEl.textContent = '❌ Selecione o filho e o título!';
+        msgEl.style.color = 'var(--color-red)';
+        return;
+      }
+
+      const res = await window.DB.saveTask({
+        profile_id: profileId,
+        title,
+        icon,
+        points_reward: pts,
+        reminder_time: reminder,
+        deadline_time: deadline,
+        frequency: freq,
+        category: cat,
+        is_active: true
+      });
+
+      if (res) {
+        msgEl.textContent = '✅ Tarefa adicionada!';
+        msgEl.style.color = 'var(--color-green)';
+        document.getElementById('t-title').value = '';
+        document.getElementById('t-icon').value = '';
+        document.getElementById('t-pts').value = '';
+        document.getElementById('t-reminder').value = '';
+        document.getElementById('t-deadline').value = '';
+        document.getElementById('t-cat').value = '';
+        loadTasksTab();
+      } else {
+        msgEl.textContent = '❌ Erro ao salvar!';
+        msgEl.style.color = 'var(--color-red)';
+      }
+      setTimeout(() => { msgEl.textContent = ''; }, 4000);
+    }
+
+    async function deleteTask(taskId, btnEl) {
+      if (!confirm('Apagar esta tarefa?')) return;
+      btnEl.disabled = true;
+      const ok = await window.DB.deleteTask(taskId);
+      if (ok) loadTasksTab();
+      else { btnEl.disabled = false; alert('Erro ao apagar.'); }
+    }
+
+    // ── MESADA ───────────────────────────────────────────────
+    async function loadMesada() {
+      await Promise.all([loadAllowances(), loadRemunerationHistory()]);
+    }
+
+    async function loadAllowances() {
+      const container = document.getElementById('allowance-list');
+      const profiles = await window.DB.getAllProfiles();
+      if (!profiles) {
+        container.innerHTML = `<div style="color:var(--color-red);">Erro ao carregar perfis.</div>`;
+        return;
+      }
+
+      container.innerHTML = profiles.map(p => `
+        <div class="allowance-card" style="border-color:${p.color || '#6C3483'}40;">
+          <div style="font-size:2rem;">${p.avatar_emoji || '🧑‍🚀'}</div>
+          <div style="flex:1;">
+            <div style="font-family:'Orbitron',sans-serif;color:${p.color || '#fff'};">${p.name}</div>
+            <div style="color:var(--text-secondary);font-size:0.82rem;">Mesada base mensal</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="color:var(--text-secondary);font-size:1.1rem;">€</span>
+            <input type="number" id="allowance-${p.id}" class="form-input"
+              style="width:110px;text-align:center;font-size:1.1rem;"
+              value="${parseFloat(p.monthly_allowance || 0).toFixed(2)}"
+              min="0" step="0.50" placeholder="0.00">
+            <button class="btn-admin" style="padding:10px 18px;font-size:0.85rem;"
+              onclick="saveAllowance('${p.id}', this)">💾 Guardar</button>
+            <span id="allowance-msg-${p.id}" style="font-size:0.88rem;min-width:60px;"></span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function saveAllowance(profileId, btnEl) {
+      const input = document.getElementById(`allowance-${profileId}`);
+      const amount = parseFloat(input.value);
+      const msgEl = document.getElementById(`allowance-msg-${profileId}`);
+
+      if (isNaN(amount) || amount < 0) {
+        msgEl.textContent = '❌ Inválido';
+        msgEl.style.color = 'var(--color-red)';
+        return;
+      }
+
+      btnEl.disabled = true;
+      const ok = await window.DB.setMonthlyAllowance(profileId, amount);
+      btnEl.disabled = false;
+
+      msgEl.textContent = ok ? '✅ Guardado!' : '❌ Erro!';
+      msgEl.style.color = ok ? 'var(--color-green)' : 'var(--color-red)';
+      setTimeout(() => { msgEl.textContent = ''; }, 3000);
+      if (ok) loadRemunerationHistory();
+    }
+
+    async function calculateLastMonth() {
+      const container = document.getElementById('calc-result');
+      container.innerHTML = `<div style="color:var(--color-neon-blue);">⏳ A calcular...</div>`;
+
+      const now = new Date();
+      const year  = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+      const month = now.getMonth() === 0 ? 12 : now.getMonth();
+
+      const MONTH_NAMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                           'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+      const monthName = MONTH_NAMES[month - 1];
+
+      const profiles = await window.DB.getAllProfiles();
+      if (!profiles) {
+        container.innerHTML = `<div style="color:var(--color-red);">Erro ao carregar perfis.</div>`;
+        return;
+      }
+
+      const results = await Promise.all(profiles.map(async p => {
+        const stats = await window.DB.getMonthlyStats(p.id, year, month);
+        const base  = parseFloat(p.monthly_allowance || 0);
+        const calc  = Math.round(base * stats.rate) / 100;
+        const monthDate = `${year}-${String(month).padStart(2, '0')}-01`;
+        await window.DB.saveRemuneration({
+          profile_id: p.id,
+          month: monthDate,
+          base_amount: base,
+          completion_rate: stats.rate,
+          calculated_amount: calc
+        });
+        return { ...p, stats, base, calc };
+      }));
+
+      container.innerHTML = `
+        <div style="color:var(--color-gold);font-family:'Orbitron',sans-serif;margin-bottom:12px;">
+          📅 ${monthName} ${year}
+        </div>
+        ${results.map(r => {
+          const rc = r.stats.rate >= 80 ? 'var(--color-green)' : r.stats.rate >= 50 ? 'var(--color-orange)' : 'var(--color-red)';
+          return `
+            <div style="display:flex;align-items:center;gap:14px;padding:12px;background:rgba(13,13,43,0.7);border-radius:12px;margin-bottom:8px;border:2px solid ${r.color || '#6C3483'}40;flex-wrap:wrap;">
+              <span style="font-size:1.8rem;">${r.avatar_emoji || '🧑‍🚀'}</span>
+              <div style="flex:1;">
+                <div style="font-family:'Orbitron',sans-serif;color:${r.color || '#fff'};">${r.name}</div>
+                <div style="color:var(--text-secondary);font-size:0.82rem;">${r.stats.completed}/${r.stats.total} tarefas concluídas</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="color:${rc};font-size:1.2rem;font-weight:bold;">${r.stats.rate}%</div>
+                <div style="color:var(--color-gold);">€${r.calc.toFixed(2)} <span style="color:var(--text-secondary);font-size:0.85rem;">/ €${r.base.toFixed(2)}</span></div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+        <div style="color:var(--color-green);font-size:0.88rem;margin-top:8px;">✅ Registado no histórico!</div>
+      `;
+
+      loadRemunerationHistory();
+    }
+
+    async function loadRemunerationHistory() {
+      const container = document.getElementById('remuneration-history');
+      const data = await window.DB.getAllRemunerations();
+
+      if (!data || data.length === 0) {
+        container.innerHTML = `<div style="color:var(--text-secondary);">Nenhum registo ainda. Clica em "Calcular Mês Anterior" para começar.</div>`;
+        return;
+      }
+
+      const MONTH_NAMES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+      container.innerHTML = data.map(r => {
+        const d = new Date(r.month + 'T12:00:00');
+        const monthLabel = `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
+        const p = r.profiles || {};
+        const rate = parseFloat(r.completion_rate);
+        const rc = rate >= 80 ? '#00FF88' : rate >= 50 ? '#FFA502' : '#FF4757';
+
+        return `
+          <div class="remun-row ${r.paid ? 'paid' : ''}" style="border-color:${p.color || '#6C3483'}40;">
+            <div style="font-size:1.7rem;">${p.avatar_emoji || '🧑‍🚀'}</div>
+            <div style="flex:1;min-width:140px;">
+              <div style="font-family:'Orbitron',sans-serif;font-size:0.9rem;color:${p.color || '#fff'};">
+                ${p.name || '-'} — ${monthLabel}
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+                <div class="rate-bar-wrap">
+                  <div class="rate-bar-fill" style="width:${rate}%;background:linear-gradient(90deg,${rc},#FFD700);box-shadow:0 0 6px ${rc};"></div>
+                </div>
+                <span style="color:${rc};font-size:0.85rem;white-space:nowrap;">${rate}%</span>
+              </div>
+              <div style="color:var(--text-secondary);font-size:0.78rem;margin-top:3px;">
+                Base: €${parseFloat(r.base_amount).toFixed(2)}
+              </div>
+            </div>
+            <div style="text-align:right;min-width:110px;">
+              <div style="color:var(--color-gold);font-size:1.25rem;font-weight:bold;">
+                €${parseFloat(r.calculated_amount).toFixed(2)}
+              </div>
+              ${r.paid
+                ? `<div style="color:var(--color-green);font-size:0.8rem;margin-top:4px;">✅ Pago ${new Date(r.paid_at).toLocaleDateString('pt-PT')}</div>`
+                : `<button class="btn-success" style="margin-top:6px;font-size:0.8rem;padding:6px 14px;"
+                    onclick="markPaid('${r.id}', this)">💸 Marcar Pago</button>`
+              }
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function markPaid(id, btnEl) {
+      btnEl.disabled = true;
+      const ok = await window.DB.markRemunerationPaid(id);
+      if (ok) {
+        loadRemunerationHistory();
+      } else {
+        btnEl.disabled = false;
+        alert('Erro ao marcar como pago.');
+      }
+    }
+
+    // ── DIÁRIOS ──────────────────────────────────────────────────
+    async function loadDiaries() {
+      const container = document.getElementById('diaries-list');
+      const diaries = await window.DB.getDiaries(20);
+
+      if (!diaries || diaries.length === 0) {
+        container.innerHTML = `<div style="color:var(--text-secondary);">Nenhuma entrada no diário ainda.</div>`;
+        return;
+      }
+
+      container.innerHTML = diaries.map(d => `
+        <div class="admin-card" style="margin-bottom:12px;">
+          <div style="font-weight:bold;color:var(--color-neon-blue);margin-bottom:6px;">
+            ${d.profiles?.avatar_emoji || ''} ${d.profiles?.name || 'Filho'} —
+            ${new Date(d.date).toLocaleDateString('pt-BR')}
+          </div>
+          <div style="color:var(--text-secondary);line-height:1.6;">${d.content || '(sem conteúdo)'}</div>
+        </div>
+      `).join('');
+    }
+  </script>
+</body>
+</html>

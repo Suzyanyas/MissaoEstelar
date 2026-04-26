@@ -1,0 +1,8 @@
+# Sistema
+.DS_Store
+Thumbs.db
+*.log
+node_modules/
+
+# Configuração local com credenciais reais (use config.example.js como base)
+js/config.js

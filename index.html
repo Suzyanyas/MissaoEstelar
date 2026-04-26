@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MissãoEstelar 🚀</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#00D4FF">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="MissãoEstelar">
+  <link rel="icon" href="icons/icon-192.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.svg">
+  <link rel="stylesheet" href="css/global.css">
+  <link href="https://fonts.googleapis.com/css?family=Orbitron:700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Nunito:400,700&display=swap" rel="stylesheet">
+  <style>
+    /* ── PIN MODAL ─────────────────────────────────────────── */
+    #pin-modal {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(5,5,20,0.92);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 20px;
+      backdrop-filter: blur(6px);
+    }
+    #pin-modal.show { display: flex; }
+
+    #pin-profile-info {
+      text-align: center;
+    }
+    #pin-profile-info .pin-avatar {
+      font-size: 4rem;
+      width: 100px; height: 100px;
+      border-radius: 50%;
+      border: 4px solid #00D4FF;
+      box-shadow: 0 0 24px #00D4FF;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 12px;
+      background: #1A1A3E;
+      animation: bounce-in 0.4s ease;
+    }
+    #pin-profile-info h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.6rem;
+      color: #00D4FF;
+    }
+
+    /* ── LIGHTBOX DA FOTO ──────────────────────────────────── */
+    #photo-lightbox {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.92);
+      z-index: 300;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 20px;
+      cursor: zoom-out;
+    }
+    #photo-lightbox.show { display: flex; }
+    #photo-lightbox img {
+      max-width: 88vw;
+      max-height: 78vh;
+      border-radius: 24px;
+      box-shadow: 0 0 60px rgba(0,212,255,0.5);
+      animation: bounce-in 0.35s ease;
+      object-fit: contain;
+    }
+    #photo-lightbox .lb-name {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.6rem;
+      color: #fff;
+      text-shadow: 0 0 16px #00D4FF;
+    }
+    #photo-lightbox .lb-hint {
+      color: rgba(255,255,255,0.45);
+      font-size: 0.9rem;
+    }
+    /* Avatar clicável quando tem foto */
+    .pin-avatar.has-photo {
+      cursor: zoom-in;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .pin-avatar.has-photo:hover {
+      transform: scale(1.08);
+      box-shadow: 0 0 36px currentColor;
+    }
+
+    .pin-dots {
+      display: flex; gap: 18px; justify-content: center;
+    }
+    .pin-dot {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      border: 3px solid #6C3483;
+      background: transparent;
+      transition: all 0.2s;
+    }
+    .pin-dot.filled {
+      background: #FFD700;
+      border-color: #FFD700;
+      box-shadow: 0 0 10px #FFD700;
+    }
+
+    .pin-keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 80px);
+      gap: 14px;
+    }
+    .pin-btn {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      border: 2px solid #6C3483;
+      background: #1A1A3E;
+      color: #fff;
+      font-size: 1.8rem;
+      font-family: 'Orbitron', sans-serif;
+      cursor: pointer;
+      transition: all 0.15s;
+      touch-action: manipulation;
+    }
+    .pin-btn:hover, .pin-btn:active {
+      background: #6C3483;
+      box-shadow: 0 0 16px #6C3483;
+      transform: scale(1.1);
+    }
+    .pin-btn.del {
+      font-size: 1.4rem;
+      color: #FF4757;
+      border-color: #FF4757;
+    }
+    .pin-btn.del:hover { background: #FF4757; }
+    .pin-btn.zero { grid-column: 2; }
+
+    #pin-error {
+      color: #FF4757;
+      font-size: 1.1rem;
+      min-height: 1.5em;
+      text-align: center;
+      animation: shake 0.4s;
+    }
+    #pin-cancel {
+      background: transparent;
+      border: 2px solid #A0AEC0;
+      color: #A0AEC0;
+      border-radius: 12px;
+      padding: 10px 28px;
+      font-size: 1rem;
+      cursor: pointer;
+      font-family: 'Nunito', sans-serif;
+    }
+    #pin-cancel:hover { border-color: #fff; color: #fff; }
+
+    /* ── RANKING ───────────────────────────────────────────── */
+    .ranking-section {
+      max-width: 700px;
+      margin: 0 auto 40px;
+      padding: 0 16px;
+    }
+    .ranking-title {
+      text-align: center;
+      font-family: 'Orbitron', sans-serif;
+      color: #FFD700;
+      font-size: 1.4rem;
+      margin-bottom: 20px;
+      text-shadow: 0 0 10px #FFD700;
+    }
+    .ranking-card {
+      background: rgba(26,26,62,0.85);
+      border-radius: 16px;
+      padding: 16px 24px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border: 2px solid rgba(108,52,131,0.4);
+    }
+    .ranking-card.rank-1 { border-color: #FFD700; box-shadow: 0 0 16px rgba(255,215,0,0.3); }
+    .ranking-card.rank-2 { border-color: #C0C0C0; }
+    .ranking-card.rank-3 { border-color: #CD7F32; }
+
+    .rank-badge {
+      font-size: 1.8rem;
+      min-width: 40px;
+      text-align: center;
+    }
+    .rank-avatar { font-size: 2rem; }
+    .rank-name {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1rem;
+      flex: 1;
+    }
+    .rank-bar-wrap {
+      flex: 2;
+    }
+    .rank-bar-bg {
+      background: rgba(255,255,255,0.1);
+      border-radius: 8px;
+      height: 14px;
+      overflow: hidden;
+    }
+    .rank-bar-fill {
+      height: 100%;
+      border-radius: 8px;
+      transition: width 1s ease;
+    }
+    .rank-count {
+      font-size: 0.9rem;
+      color: #A0AEC0;
+      margin-top: 4px;
+    }
+    .rank-pts {
+      font-size: 1rem;
+      color: #FFD700;
+      font-weight: bold;
+      min-width: 70px;
+      text-align: right;
+    }
+
+    /* ── PROFILE CARDS ─────────────────────────────────────── */
+    .profile-grid {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      flex-wrap: wrap;
+      max-width: 900px;
+      margin: 0 auto 40px;
+      padding: 0 16px;
+    }
+    .profile-card {
+      width: 190px;
+      background: rgba(26,26,62,0.85);
+      border-radius: 16px;
+      padding: 24px 16px;
+      cursor: pointer;
+      border: 4px solid;
+      transition: transform 0.2s, box-shadow 0.2s;
+      text-align: center;
+    }
+    .profile-card:hover, .profile-card:active {
+      transform: scale(1.06);
+    }
+    .profile-card .pname {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1rem;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="stars-bg" id="stars-bg"></div>
+
+  <main style="position:relative;z-index:1;">
+    <h1 class="glow-text" style="text-align:center;font-size:2.8rem;margin-top:32px;padding:0 16px;">MISSÃO ESTELAR 🚀</h1>
+    <h2 style="text-align:center;color:var(--color-neon-blue);margin-bottom:36px;font-size:1.2rem;">Quem é o astronauta de hoje?</h2>
+
+    <!-- Cards de perfil (preenchidos via JS) -->
+    <div class="profile-grid" id="profiles-list">
+      <div style="color:var(--text-secondary);text-align:center;width:100%;padding:40px 0;">Carregando tripulação... 🛸</div>
+    </div>
+
+    <!-- Ranking semanal -->
+    <div class="ranking-section">
+      <div class="ranking-title">🏆 CORRIDA ESPACIAL DA SEMANA</div>
+      <div id="ranking-list">
+        <div style="color:var(--text-secondary);text-align:center;padding:20px;">Calculando ranking... ⚡</div>
+      </div>
+    </div>
+
+    <footer style="text-align:center;color:var(--color-neon-blue);font-size:1.5rem;padding-bottom:120px;">
+      <span id="admin-gear" style="cursor:pointer;opacity:0.5;font-size:1.2rem;">⚙️ admin</span>
+    </footer>
+  </main>
+
+  <!-- CÓSMICO -->
+  <img src="assets/cosmico.svg" alt="CÓSMICO" id="cosmico-img"
+    style="position:fixed;right:32px;bottom:32px;width:110px;animation:float 3s infinite;z-index:2;cursor:pointer;"
+    title="Falar com CÓSMICO">
+
+  <!-- Lightbox da foto -->
+  <div id="photo-lightbox" onclick="closeLightbox()">
+    <img id="lightbox-img" src="" alt="">
+    <div class="lb-name" id="lightbox-name"></div>
+    <div class="lb-hint">Toca para fechar</div>
+  </div>
+
+  <!-- Modal PIN -->
+  <div id="pin-modal">
+    <div id="pin-profile-info">
+      <div class="pin-avatar" id="pin-avatar">🧑‍🚀</div>
+      <h2 id="pin-name">Astronauta</h2>
+      <p style="color:var(--text-secondary);font-size:0.95rem;">Digite a tua palavra-passe 🔑</p>
+    </div>
+
+    <div class="pin-dots" id="pin-dots">
+      <div class="pin-dot" id="d0"></div>
+      <div class="pin-dot" id="d1"></div>
+      <div class="pin-dot" id="d2"></div>
+      <div class="pin-dot" id="d3"></div>
+    </div>
+
+    <div id="pin-error"></div>
+
+    <div class="pin-keypad">
+      <button class="pin-btn" data-n="1">1</button>
+      <button class="pin-btn" data-n="2">2</button>
+      <button class="pin-btn" data-n="3">3</button>
+      <button class="pin-btn" data-n="4">4</button>
+      <button class="pin-btn" data-n="5">5</button>
+      <button class="pin-btn" data-n="6">6</button>
+      <button class="pin-btn" data-n="7">7</button>
+      <button class="pin-btn" data-n="8">8</button>
+      <button class="pin-btn" data-n="9">9</button>
+      <button class="pin-btn zero" data-n="0">0</button>
+      <button class="pin-btn del" id="pin-del">⌫</button>
+    </div>
+
+    <button id="pin-cancel">Cancelar</button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/avatar.js"></script>
+  <script src="js/sounds.js"></script>
+  <script src="js/speech.js"></script>
+  <script>
+    // ── ESTRELAS ────────────────────────────────────────────────
+    (function() {
+      const bg = document.getElementById('stars-bg');
+      for (let i = 0; i < 120; i++) {
+        const s = document.createElement('div');
+        s.style.cssText = `position:absolute;border-radius:50%;background:#fff;
+          left:${Math.random()*100}vw;top:${Math.random()*100}vh;
+          width:${Math.random()*2+1}px;height:${Math.random()*2+1}px;
+          opacity:${Math.random()*0.7+0.3};
+          animation:twinkle ${Math.random()*2+2}s infinite ease-in-out;`;
+        bg.appendChild(s);
+      }
+    })();
+
+    // ── ESTADO DO PIN ───────────────────────────────────────────
+    let selectedProfile = null;  // { id, name, avatar_emoji, color, pin }
+    let pinBuffer = '';
+
+    // ── CARREGAR PERFIS ─────────────────────────────────────────
+    async function loadProfiles() {
+      const list = document.getElementById('profiles-list');
+      const profiles = await window.DB.getProfiles();
+
+      if (!profiles || profiles.length === 0) {
+        list.innerHTML = `<div style="color:var(--color-red);text-align:center;width:100%;">
+          Nenhum perfil encontrado. Configure no Supabase! 🛸
+        </div>`;
+        return;
+      }
+
+      list.innerHTML = profiles.map(p => `
+        <div class="profile-card" style="border-color:${p.color};"
+             data-id="${p.id}" onclick="openPin('${p.id}')">
+          <div class="avatar-circle" style="border-color:${p.color};box-shadow:0 0 16px ${p.color};overflow:hidden;position:relative;">
+            ${p.avatar_url
+              ? `<img src="${p.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"
+                   onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${p.avatar_emoji||'🧑‍🚀'}',style:'font-size:3rem'}));">`
+              : `<span style="font-size:3rem;">${p.avatar_emoji || '🧑‍🚀'}</span>`}
+          </div>
+          <div class="pname" style="color:${p.color};">${p.name}</div>
+          <div class="badge-points" style="margin:10px auto 0;">⭐ ${p.total_points || 0}</div>
+        </div>
+      `).join('');
+
+      // Guarda perfis em memória para o modal de PIN
+      window._profiles = profiles;
+    }
+
+    // ── RANKING SEMANAL ─────────────────────────────────────────
+    async function loadRanking() {
+      const container = document.getElementById('ranking-list');
+      const ranking = await window.DB.getWeeklyRanking();
+
+      if (!ranking || ranking.length === 0) {
+        container.innerHTML = `<div style="color:var(--text-secondary);text-align:center;">Nenhum dado ainda esta semana.</div>`;
+        return;
+      }
+
+      const medals = ['🥇', '🥈', '🥉'];
+      const colors = ['#FFD700', '#C0C0C0', '#CD7F32'];
+      const maxDone = Math.max(...ranking.map(r => r.tasks_done_week || 0), 1);
+
+      container.innerHTML = ranking.map((r, i) => {
+        const pct = Math.round(((r.tasks_done_week || 0) / maxDone) * 100);
+        const barColor = r.color || '#00D4FF';
+        return `
+          <div class="ranking-card rank-${i + 1}">
+            <div class="rank-badge">${medals[i] || `#${i+1}`}</div>
+            <div class="rank-avatar">${r.avatar_emoji || '🧑‍🚀'}</div>
+            <div style="flex:1;">
+              <div class="rank-name" style="color:${r.color || '#fff'};">${r.name}</div>
+              <div class="rank-bar-wrap">
+                <div class="rank-bar-bg">
+                  <div class="rank-bar-fill" style="width:${pct}%;background:${barColor};box-shadow:0 0 8px ${barColor};"></div>
+                </div>
+                <div class="rank-count">${r.tasks_done_week || 0} tarefas esta semana • ${r.days_active_week || 0} dias ativos</div>
+              </div>
+            </div>
+            <div class="rank-pts">⭐ ${r.total_points || 0}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ── PIN MODAL ───────────────────────────────────────────────
+    function openPin(profileId) {
+      const profile = (window._profiles || []).find(p => p.id === profileId);
+      if (!profile) return;
+
+      selectedProfile = profile;
+      pinBuffer = '';
+      updatePinDots();
+
+      if (window.SPEECH) window.SPEECH.speak(`Olá, ${profile.name}!`);
+      document.getElementById('pin-error').textContent = '';
+      const pinAv = document.getElementById('pin-avatar');
+      pinAv.style.borderColor = profile.color;
+      pinAv.style.boxShadow = `0 0 24px ${profile.color}`;
+      pinAv.style.overflow = 'hidden';
+      pinAv.onclick = null;
+      pinAv.classList.remove('has-photo');
+
+      if (profile.avatar_url) {
+        pinAv.innerHTML = `<img src="${profile.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+        pinAv.classList.add('has-photo');
+        pinAv.title = 'Toca para ver a foto!';
+        pinAv.onclick = (e) => {
+          e.stopPropagation();
+          openLightbox(profile.avatar_url, profile.name);
+        };
+      } else {
+        pinAv.textContent = profile.avatar_emoji || '🧑‍🚀';
+      }
+      document.getElementById('pin-name').textContent = profile.name;
+      document.getElementById('pin-name').style.color = profile.color;
+      document.getElementById('pin-modal').classList.add('show');
+    }
+
+    function updatePinDots() {
+      for (let i = 0; i < 4; i++) {
+        const dot = document.getElementById(`d${i}`);
+        dot.classList.toggle('filled', i < pinBuffer.length);
+      }
+    }
+
+    function pinDigit(n) {
+      if (pinBuffer.length >= 4) return;
+      pinBuffer += n;
+      window.SFX?.pinClick();
+      updatePinDots();
+      if (pinBuffer.length === 4) {
+        setTimeout(checkPin, 150);
+      }
+    }
+
+    function pinBackspace() {
+      if (pinBuffer.length > 0) {
+        pinBuffer = pinBuffer.slice(0, -1);
+        updatePinDots();
+      }
+    }
+
+    async function checkPin() {
+      const errorEl = document.getElementById('pin-error');
+      const ok = await window.DB.verifyPin(selectedProfile.id, pinBuffer);
+
+      if (ok) {
+        window.SFX?.pinSuccess();
+        // Salva sessão e redireciona
+        sessionStorage.setItem('loggedProfile', JSON.stringify({
+          id: selectedProfile.id,
+          name: selectedProfile.name,
+          avatar: selectedProfile.avatar_emoji,
+          color: selectedProfile.color
+        }));
+        document.getElementById('pin-modal').classList.remove('show');
+        window.location.href = `dashboard.html?profile=${selectedProfile.id}`;
+      } else {
+        window.SFX?.pinError();
+        errorEl.textContent = '❌ Palavra-passe errada! Tenta de novo.';
+        errorEl.style.animation = 'none';
+        setTimeout(() => { errorEl.style.animation = 'shake 0.4s'; }, 10);
+        pinBuffer = '';
+        updatePinDots();
+        if (window.SPEECH) window.SPEECH.speak('Palavra-passe errada! Tenta de novo!');
+      }
+    }
+
+    // Botões do keypad
+    document.querySelectorAll('.pin-btn[data-n]').forEach(btn => {
+      btn.addEventListener('click', () => pinDigit(btn.getAttribute('data-n')));
+    });
+    document.getElementById('pin-del').addEventListener('click', pinBackspace);
+    document.getElementById('pin-cancel').addEventListener('click', () => {
+      document.getElementById('pin-modal').classList.remove('show');
+      selectedProfile = null;
+      pinBuffer = '';
+    });
+
+    // Teclado físico também funciona
+    document.addEventListener('keydown', (e) => {
+      if (!document.getElementById('pin-modal').classList.contains('show')) return;
+      if (e.key >= '0' && e.key <= '9') pinDigit(e.key);
+      if (e.key === 'Backspace') pinBackspace();
+      if (e.key === 'Escape') document.getElementById('pin-cancel').click();
+    });
+
+    // ── LIGHTBOX ─────────────────────────────────────────────────
+    function openLightbox(url, name) {
+      window.SFX?.photoOpen();
+      document.getElementById('lightbox-img').src = url;
+      document.getElementById('lightbox-name').textContent = name;
+      document.getElementById('photo-lightbox').classList.add('show');
+    }
+    function closeLightbox() {
+      document.getElementById('photo-lightbox').classList.remove('show');
+    }
+    // Fecha com ESC
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeLightbox();
+    });
+
+    // ── ADMIN ───────────────────────────────────────────────────
+    document.getElementById('admin-gear').addEventListener('click', () => {
+      window.location.href = 'admin.html';
+    });
+
+    // ── CÓSMICO saudação ────────────────────────────────────────
+    document.getElementById('cosmico-img').addEventListener('click', () => {
+      const greetings = [
+        'Olá exploradores! Quem vai completar missões hoje? 🚀',
+        'O universo das tarefas aguarda! Escolha seu astronauta! ⭐',
+        'Cada tarefa completa é um passo para as estrelas! 🌟'
+      ];
+      if (window.SPEECH) window.SPEECH.speak(greetings[Math.floor(Math.random() * greetings.length)]);
+    });
+
+    // ── SERVICE WORKER ───────────────────────────────────────────
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
+
+    // ── INICIALIZAÇÃO ───────────────────────────────────────────
+    (async function init() {
+      await Promise.all([loadProfiles(), loadRanking()]);
+      // Sons e voz apenas após interação do utilizador (política do browser)
+    })();
+  </script>
+</body>
+</html>
