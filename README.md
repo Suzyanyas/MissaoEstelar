@@ -56,5 +56,7 @@ MissãoEstelar transforma as tarefas diárias das crianças numa aventura interg
 
 ---
 
-## 📁 Estrutura do Projeto
+Este projeto é de uso pessoal/familiar. Sem licença open-source definida.
+
+Feito por uma mãe que quis tornar as tarefas diárias numa aventura espacial.
 
